@@ -7,10 +7,123 @@
     <title>Test AWS Lambda</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
+    <header >
+    <h1 style="text-align: center;">My simple inventory app!</h1>
+    <button id="loadButton">Load all items</button>
+    </header>
+
+    <table id="inventory">
+        <tr style="background-color: lightgray;">
+            <th>Id</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Action</th>
+        </tr>
+    </table>
+
+    <script>
+        document.getElementById("loadButton").onclick = function(){
+            let xhr = new XMLHttpRequest();
+            let table = document.getElementById("inventory");
+    
+            xhr.addEventListener("load", function () {
+                let data = JSON.parse(this.responseText);
+                
+                table.innerHTML = `
+                    <tr style="background-color: lightgray;">
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                `;
+    
+                data.forEach(item => {
+                    let row = table.insertRow();
+                    row.insertCell(0).innerText = item.id;
+                    row.insertCell(1).innerText = item.name;
+                    row.insertCell(2).innerText = `$${item.price}`;
+    
+                    // Create Delete button
+                    let actionCell = row.insertCell(3);
+                    let deleteButton = document.createElement("button");
+                    deleteButton.innerText = "Delete";
+                    deleteButton.style.color = "white";
+                    deleteButton.style.backgroundColor = "red";
+                    deleteButton.onclick = function() {
+                        row.remove(); 
+                        let deleteRequest = new XMLHttpRequest(); 
+                        deleteRequest.open("DELETE", `https://fk7oe7bqme.execute-api.us-east-2.amazonaws.com/items/${item.id}`);
+                        deleteRequest.setRequestHeader("Content-Type", "application/json");
+                        deleteRequest.send();
+                        alert(`Deleted ${item.name}`);
+                    };
+                    actionCell.appendChild(deleteButton);
+                });
+            });
+    
+            xhr.open("GET", "https://fk7oe7bqme.execute-api.us-east-2.amazonaws.com/items");
+            xhr.send();
+        };
+    </script>
+
+    <br><br><br>
+    <div id="inputDiv">
+        <h2>Add New Item to Database</h2>
+        <label for="idInput">ID:</label>
+        <input type="text" id="idInput" placeholder="Enter ID"><br>
+    
+        <label for="nameInput">Name:</label>
+        <input type="text" id="nameInput" placeholder="Enter Name"><br>
+    
+        <label for="priceInput">Price:</label>
+        <input type="text" id="priceInput" placeholder="Enter Price"><br>
+    
+        <button id="addItemButton">Add Item</button>
+    </div>
+
+    <script>
+    document.getElementById("addItemButton").onclick = function() {
+        const id = document.getElementById("idInput").value;
+        const name = document.getElementById("nameInput").value;
+        const price = document.getElementById("priceInput").value;
+
+        if (!id || !name || !price) {
+            alert("Please fill out all fields before adding an item.");
+            return;
+        }
+
+        let xhr = new XMLHttpRequest();
+        xhr.open("PUT", "https://fk7oe7bqme.execute-api.us-east-2.amazonaws.com/items");
+        xhr.setRequestHeader("Content-Type", "application/json");
+
+        const data = JSON.stringify({
+            "id": id,
+            "price": price, 
+            "name": name
+        });
+
+        xhr.send(data);
+
+        document.getElementById("idInput").value = "";
+        document.getElementById("nameInput").value = "";
+        document.getElementById("priceInput").value = "";
+
+        alert("Item added successfully!");
+    };
+
+    </script>
+    
+
+
+
+    <br><br><br><br><br><br><br><br><br><br><br><br>
+    <br><br><br><br><br><br><br><br><br><br><br><br>
+    <br><br><br><br><br><br><br><br><br><br><br><br>
     <h1>Simple Demo for PUT, GET, and DELETE</h1>
     <p id="lambda-info">
         <!-- loaded with AJAX -->
@@ -22,7 +135,7 @@
     <script>
         document.getElementById("send-data").onclick = function () {
             let xhr = new XMLHttpRequest();
-            xhr.open("PUT", "Your Lambda here");
+            xhr.open("PUT", "https://fk7oe7bqme.execute-api.us-east-2.amazonaws.com/items");
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.send(JSON.stringify({
                 "id": "6666666",
@@ -41,7 +154,7 @@
             xhr.addEventListener("load", function () {
                 lambda.innerHTML = xhr.response;
             });
-            xhr.open("GET", "Your Lambda here");
+            xhr.open("GET", "https://fk7oe7bqme.execute-api.us-east-2.amazonaws.com/items");
             xhr.send();
         }
 
@@ -53,7 +166,7 @@
     <script>
         document.getElementById("delete-data").onclick = function () {
             let xhr = new XMLHttpRequest();
-            xhr.open("DELETE", "Your Lambda here");
+            xhr.open("DELETE", "https://fk7oe7bqme.execute-api.us-east-2.amazonaws.com/items/6666666");
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.send();
         }
